@@ -10,25 +10,25 @@ unicorn.rotation(0)
 unicorn.brightness(0.5)
 width,height=unicorn.get_shape()
 
+def setColor(r,g,b):
+    unicorn.clear()
+    unicorn.set_all(r,g,b)
+    unicorn.show()
+
 
 @app.route('/red', methods=['GET'])
 def red():
-  unicorn.clear()
-  unicorn.set_all(255,45,0)
-  unicorn.show()
+  setColor(255,45,0)
   return 'Red'
 
 @app.route('/yellow', methods=['GET'])
 def yellow():
-  unicorn.clear()
-  unicorn.set_all(255,253,0)
-  unicorn.show()
+  setColor(255,253,0)
   return 'Yellow'
 
 @app.route('/green', methods=['GET'])
 def green():
-  unicorn.clear()
-  unicorn.set_all(0,224,55)
+  setColor(0,224,55)
   unicorn.show()
   return 'Green'
 
