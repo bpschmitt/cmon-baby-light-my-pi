@@ -7,7 +7,7 @@ app.config["DEBUG"] = True
 
 unicorn.set_layout(unicorn.AUTO)
 unicorn.rotation(0)
-unicorn.brightness(0.5)
+unicorn.brightness(0.8)
 width,height=unicorn.get_shape()
 
 def setColor(r,g,b):
