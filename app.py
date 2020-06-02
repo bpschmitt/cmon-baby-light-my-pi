@@ -3,7 +3,7 @@ import time
 import unicornhat as unicorn
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+app.config["DEBUG"] = False
 
 # Defaults
 unicorn.set_layout(unicorn.AUTO)
