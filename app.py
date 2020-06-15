@@ -32,6 +32,11 @@ def green():
   setColor(0,224,55)
   return 'Green'
 
+@app.route('/blue', methods=['GET'])
+def blue():
+  setColor(1,17,213)
+  return 'Blue'
+
 @app.route('/off', methods=['GET'])
 def off():
   unicorn.off()

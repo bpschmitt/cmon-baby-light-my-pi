@@ -4,18 +4,61 @@ from datetime import timedelta
 import pickle
 import os.path
 import requests
-from googleapiclient.discovery import build
+import logging
+from googleapiclient.discovery import build 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+today = datetime.datetime.date(datetime.datetime.now())
 dietpi = 'http://localhost:5000/'
 tokenPickle = "/home/dietpi/projects/cmon-baby-light-my-pi/token.pickle"
 credentialsFile = '/home/dietpi/projects/cmon-baby-light-my-pi/credentials.json'
+logFile = '/tmp/pi.' + str(today) + '.log'
+colorList = {'5': 'yellow','9': 'blue', '10': 'green', '11': 'red'}
+startTime, endTime = 8, 18
+
+#################################################################################
+
+logger = logging.getLogger('nrpi')
+handler = logging.FileHandler(logFile)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+#logger.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+def setColor(events):
+
+    today = datetime.datetime.now()
+
+    if today.strftime('%A') == 'Saturday' or today.strftime('%A') == 'Sunday':
+        r = requests.get(dietpi + 'off')
+        logger.info('It\'s the weekend.')
+    elif int(today.strftime('%H')) < startTime  or int(today.strftime('%H')) >= endTime:
+        r = requests.get(dietpi + 'off')
+        logger.info('It\'s after hours.')
+    else:
+        if not events:
+            logger.info('No events found.')
+            r = requests.get(dietpi + 'green')
+        else:
+            for event in events:
+                if 'colorId' in event:
+                    color = colorList[event['colorId']]
+                    r = requests.get(dietpi + color)
+                    start = event['start'].get('dateTime', event['start'].get('date'))
+                    logger.info('eventStartTime: ' + start + ' - eventTitle: ' + event['summary'] + ' - eventColor: ' + color)
+                else:
+                    color = 'red'
+                    r = requests.get(dietpi + color)
+                    start = event['start'].get('dateTime', event['start'].get('date'))
+                    logger.info('eventStartTime: ' + start + ' - eventTitle: ' + event['summary'] + ' - eventColor: ' + color)
 
 
 def main():
+
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -43,27 +86,14 @@ def main():
     # Call the Calendar API
     now = datetime.datetime.utcnow()
     next = now + timedelta(minutes=1)
-    #print(now + " --- " + next.isoformat() + 'Z')
-    #print('Getting the upcoming 10 events')
-    events_result = service.events().list(calendarId='primary', timeMin=now.isoformat() + 'Z', timeMax=next.isoformat() + 'Z',
+
+    events_result = service.events().list(calendarId='primary',
+                                        timeMin=now.isoformat() + 'Z', timeMax=next.isoformat() + 'Z',
                                         maxResults=5, singleEvents=True,
                                         orderBy='startTime').execute()
     events = events_result.get('items', [])
 
-    if not events:
-        print(now.isoformat() + 'Z'  + ' No upcoming events found.')
-        r = requests.get(dietpi + 'green')
-    if len(events) > 0:
-        r = requests.get(dietpi + 'red')
-        for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            print(start, event['summary'])
-    
-    #for event in events:
-    #    start = event['start'].get('dateTime', event['start'].get('date'))
-    #    print(start, event['summary'])
-    #    r = requests.get(dietpi + 'red')
-
-
+    setColor(events)
+ 
 if __name__ == '__main__':
     main()
